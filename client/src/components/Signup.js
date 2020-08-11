@@ -8,9 +8,21 @@ class Signup extends React.Component {
     password: "",
   };
 
+  
   handleChange = ({ event, value }) => {
     event.persist();
     this.setState({ [event.target.name]: value });
+  };
+
+  handleSubmit = (event) => {
+    event.preventDefault();
+    if (!this.isFormEmpty(this.state)) {
+      console.log("submitted");
+    }
+  };
+
+  isFormEmpty = ({ username, email, password }) => {
+    return !username || !email || !password;
   };
 
   render() {
@@ -35,6 +47,7 @@ class Signup extends React.Component {
               textAlign: "center",
               maxWidth: 450,
             }}
+            onSubmit={this.handleSubmit}
           >
             {/* Sign Up Form Heading */}
             <Box
@@ -72,12 +85,7 @@ class Signup extends React.Component {
               placeholder="Password"
               onChange={this.handleChange}
             />
-            <Button
-              inline
-              color="blue"
-              text="Submit"
-              type="submit"
-            />
+            <Button inline color="blue" text="Submit" type="submit" />
           </form>
         </Box>
       </Container>
