@@ -66,8 +66,8 @@ class Signup extends React.Component {
         <Box
           dangerouslySetInlineStyle={{
             __style: {
-              backgroundColor: "#ebe2da",
-            },
+              backgroundColor: "#ebe2da"
+            }
           }}
           margin={4}
           padding={4}
@@ -80,7 +80,7 @@ class Signup extends React.Component {
             style={{
               display: "inlineBlock",
               textAlign: "center",
-              maxWidth: 450,
+              maxWidth: 450
             }}
             onSubmit={this.handleSubmit}
           >
