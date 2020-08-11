@@ -1,6 +1,15 @@
 import React from "react";
 import Strapi from "strapi-sdk-javascript/build/main";
-import { Box, Heading, Text, Image, Card, Button, Mask, IconButton } from "gestalt";
+import {
+  Box,
+  Heading,
+  Text,
+  Image,
+  Card,
+  Button,
+  Mask,
+  IconButton,
+} from "gestalt";
 import { Link } from "react-router-dom";
 const apiUrl = process.env.API_URL || "http://localhost:1337";
 const strapi = new Strapi(apiUrl);
@@ -58,6 +67,13 @@ class Brews extends React.Component {
       updatedItems[alreadyInCart].quantity += 1;
       this.setState({ cartItems: updatedItems });
     }
+  };
+
+  deleteItemFromCart = (itemToDeleteId) => {
+    const filteredItems = this.state.cartItems.filter(
+      (item) => item._id !== itemToDeleteId
+    );
+    this.setState({ cartItems: filteredItems });
   };
 
   render() {
@@ -160,12 +176,13 @@ class Brews extends React.Component {
                       {item.name} x {item.quantity} -{" "}
                       {(item.quantity * item.price).toFixed(2)}
                     </Text>
-                      <IconButton
-                        accessibilityLabel="Delete Item"
-                        icon="cancel"
-                        size="sm"
-                        iconColor="red"
-                      />
+                    <IconButton
+                      accessibilityLabel="Delete Item"
+                      icon="cancel"
+                      size="sm"
+                      iconColor="red"
+                      onClick={() => this.deleteItemFromCart(item._id)}
+                    />
                   </Box>
                 ))}
                 <Box
