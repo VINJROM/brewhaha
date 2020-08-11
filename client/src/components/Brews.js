@@ -10,6 +10,7 @@ import {
   Mask,
   IconButton,
 } from "gestalt";
+import { calculatePrice, getCart, setCart } from "./utils";
 import { Link } from "react-router-dom";
 const apiUrl = process.env.API_URL || "http://localhost:1337";
 const strapi = new Strapi(apiUrl);
@@ -45,6 +46,7 @@ class Brews extends React.Component {
       this.setState({
         brews: response.data.brand.brews,
         brand: response.data.brand.name,
+        cartItems: getCart()
       });
     } catch (err) {
       console.error(err);
@@ -65,7 +67,7 @@ class Brews extends React.Component {
     } else {
       const updatedItems = [...this.state.cartItems];
       updatedItems[alreadyInCart].quantity += 1;
-      this.setState({ cartItems: updatedItems });
+      this.setState({ cartItems: updatedItems } , ()=> setCart(updatedItems));
     }
   };
 
@@ -73,7 +75,7 @@ class Brews extends React.Component {
     const filteredItems = this.state.cartItems.filter(
       (item) => item._id !== itemToDeleteId
     );
-    this.setState({ cartItems: filteredItems });
+    this.setState({ cartItems: filteredItems }, ()=> setCart(filteredItems));
   };
 
   render() {
@@ -164,7 +166,7 @@ class Brews extends React.Component {
               padding={2}
             >
               {/* User Cart Heading */}
-              <Heading align="center" size="md">
+              <Heading align="center" size="sm">
                 Your Cart
               </Heading>
               <Text color="gray" italic>
@@ -196,7 +198,7 @@ class Brews extends React.Component {
                       <Text color="red">Please select some items</Text>
                     )}
                   </Box>
-                  <Text size="lg">Total: $3.69</Text>
+                  <Text size="lg">Total: {calculatePrice(cartItems)}</Text>
                   <Text>
                     <Link to="/checkout">Checkout</Link>
                   </Text>
