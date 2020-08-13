@@ -1,10 +1,11 @@
 import React from "react";
 // prettier-ignore
 import { Container, Box, Button, Heading, Text, TextField, Modal, Spinner } from "gestalt";
+import {Elements, StripeProvider, CardElement, injectStripe} from 'react-stripe-elements'
 import ToastMessage from "./ToastMessage";
 import { getCart, calculatePrice } from "./utils";
 
-class Checkout extends React.Component {
+class _CheckoutForm extends React.Component {
   state = {
     cartItems: [],
     address: "",
@@ -14,7 +15,7 @@ class Checkout extends React.Component {
     toast: false,
     toastMessage: "",
     orderProcessing: true,
-    modal: false
+    modal: false,
   };
 
   componentDidMount() {
@@ -26,7 +27,7 @@ class Checkout extends React.Component {
     this.setState({ [event.target.name]: value });
   };
 
-  handleConfirmOrder = async event => {
+  handleConfirmOrder = async (event) => {
     event.preventDefault();
 
     if (this.isFormEmpty(this.state)) {
@@ -43,7 +44,7 @@ class Checkout extends React.Component {
     return !address || !postalCode || !city || !confirmationEmailAddress;
   };
 
-  showToast = toastMessage => {
+  showToast = (toastMessage) => {
     this.setState({ toast: true, toastMessage });
     setTimeout(() => this.setState({ toast: false, toastMessage: "" }), 5000);
   };
@@ -83,7 +84,7 @@ class Checkout extends React.Component {
                   {cartItems.length} Items for Checkout
                 </Text>
                 <Box padding={2}>
-                  {cartItems.map(item => (
+                  {cartItems.map((item) => (
                     <Box key={item._id} padding={1}>
                       <Text color="midnight">
                         {item.name} x {item.quantity} - $
@@ -99,7 +100,7 @@ class Checkout extends React.Component {
                 style={{
                   display: "inlineBlock",
                   textAlign: "center",
-                  maxWidth: 450
+                  maxWidth: 450,
                 }}
                 onSubmit={this.handleConfirmOrder}
               >
@@ -134,6 +135,11 @@ class Checkout extends React.Component {
                   name="confirmationEmailAddress"
                   placeholder="Confirmation Email Address"
                   onChange={this.handleChange}
+                />
+                {/* Credit Card Element */}
+                <CardElement
+                  id="stripe__input"
+                  onReady={(input) => input.focus()}
                 />
                 <button id="stripe__button" type="submit">
                   Submit
@@ -171,7 +177,7 @@ const ConfirmationModal = ({
   orderProcessing,
   cartItems,
   closeModal,
-  handleSubmitOrder
+  handleSubmitOrder,
 }) => (
   <Modal
     accessibilityCloseLabel="close"
@@ -217,7 +223,7 @@ const ConfirmationModal = ({
         padding={2}
         color="lightWash"
       >
-        {cartItems.map(item => (
+        {cartItems.map((item) => (
           <Box key={item._id} padding={1}>
             <Text size="lg" color="red">
               {item.name} x {item.quantity} - ${item.quantity * item.price}
@@ -243,6 +249,16 @@ const ConfirmationModal = ({
       </Text>
     )}
   </Modal>
+);
+
+const CheckoutForm = injectStripe(_CheckoutForm);
+
+const Checkout = () => (
+  <StripeProvider apiKey="pk_test_51HFmoBAbY4PDXAYpvghdqL4SKpLFfmF23ke65sqeXzessFZ7SoHQEncPF9zEde9Mmk26Zi5nqbem7SKOAPbzawMz0025T2qFu6">
+    <Elements>
+      <_CheckoutForm />
+    </Elements>
+  </StripeProvider>
 );
 
 export default Checkout;
