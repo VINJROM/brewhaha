@@ -1,9 +1,14 @@
 import React from "react";
 // prettier-ignore
 import { Container, Box, Button, Heading, Text, TextField, Modal, Spinner } from "gestalt";
-import {Elements, StripeProvider, CardElement, injectStripe} from 'react-stripe-elements'
+// prettier-ignore
+import { Elements, StripeProvider, CardElement, injectStripe } from 'react-stripe-elements';
 import ToastMessage from "./ToastMessage";
-import { getCart, calculatePrice } from "./utils";
+import { getCart, calculatePrice, clearCart, calculateAmount } from "./utils";
+import { withRouter } from "react-router-dom";
+import Strapi from "strapi-sdk-javascript/build/main";
+const apiUrl = process.env.API_URL || "http://localhost:1337";
+const strapi = new Strapi(apiUrl);
 
 class _CheckoutForm extends React.Component {
   state = {
@@ -14,8 +19,8 @@ class _CheckoutForm extends React.Component {
     confirmationEmailAddress: "",
     toast: false,
     toastMessage: "",
-    orderProcessing: true,
-    modal: false,
+    orderProcessing: false,
+    modal: false
   };
 
   componentDidMount() {
@@ -27,7 +32,7 @@ class _CheckoutForm extends React.Component {
     this.setState({ [event.target.name]: value });
   };
 
-  handleConfirmOrder = async (event) => {
+  handleConfirmOrder = async event => {
     event.preventDefault();
 
     if (this.isFormEmpty(this.state)) {
@@ -38,15 +43,52 @@ class _CheckoutForm extends React.Component {
     this.setState({ modal: true });
   };
 
-  handleSubmitOrder = () => {};
+  handleSubmitOrder = async () => {
+    const { cartItems, city, address, postalCode } = this.state;
+
+    const amount = calculateAmount(cartItems);
+    // Process order
+    this.setState({ orderProcessing: true });
+    let token;
+    try {
+      // Create Stripe token
+      const response = await this.props.stripe.createToken();
+      token = response.token.id;
+      // Create order with Strapi SDK - make request to backend
+      await strapi.createEntry("orders", {
+        amount,
+        brews: cartItems,
+        city,
+        postalCode,
+        address,
+        token
+      });
+      // Set orderProcessing - false, set modal - false
+      this.setState({ orderProcessing: false, modal: false });
+      // Clear user cart
+      clearCart();
+      this.showToast("Your order has been successfully submitted!", true);
+    } catch (err) {
+      this.setState({ orderProcessing: false, modal: false });
+      this.showToast(err.message);
+    }
+  };
 
   isFormEmpty = ({ address, postalCode, city, confirmationEmailAddress }) => {
     return !address || !postalCode || !city || !confirmationEmailAddress;
   };
 
-  showToast = (toastMessage) => {
+  showToast = (toastMessage, redirect = false) => {
     this.setState({ toast: true, toastMessage });
-    setTimeout(() => this.setState({ toast: false, toastMessage: "" }), 5000);
+    setTimeout(
+      () =>
+        this.setState(
+          { toast: false, toastMessage: "" },
+          // if true passed to 'redirect' argument, redirect home
+          () => redirect && this.props.history.push("/")
+        ),
+      5000
+    );
   };
 
   closeModal = () => this.setState({ modal: false });
@@ -84,7 +126,7 @@ class _CheckoutForm extends React.Component {
                   {cartItems.length} Items for Checkout
                 </Text>
                 <Box padding={2}>
-                  {cartItems.map((item) => (
+                  {cartItems.map(item => (
                     <Box key={item._id} padding={1}>
                       <Text color="midnight">
                         {item.name} x {item.quantity} - $
@@ -100,7 +142,7 @@ class _CheckoutForm extends React.Component {
                 style={{
                   display: "inlineBlock",
                   textAlign: "center",
-                  maxWidth: 450,
+                  maxWidth: 450
                 }}
                 onSubmit={this.handleConfirmOrder}
               >
@@ -115,7 +157,7 @@ class _CheckoutForm extends React.Component {
                 {/* Postal Code Input */}
                 <TextField
                   id="postalCode"
-                  type="number"
+                  type="text"
                   name="postalCode"
                   placeholder="Postal Code"
                   onChange={this.handleChange}
@@ -139,7 +181,7 @@ class _CheckoutForm extends React.Component {
                 {/* Credit Card Element */}
                 <CardElement
                   id="stripe__input"
-                  onReady={(input) => input.focus()}
+                  onReady={input => input.focus()}
                 />
                 <button id="stripe__button" type="submit">
                   Submit
@@ -177,7 +219,7 @@ const ConfirmationModal = ({
   orderProcessing,
   cartItems,
   closeModal,
-  handleSubmitOrder,
+  handleSubmitOrder
 }) => (
   <Modal
     accessibilityCloseLabel="close"
@@ -223,7 +265,7 @@ const ConfirmationModal = ({
         padding={2}
         color="lightWash"
       >
-        {cartItems.map((item) => (
+        {cartItems.map(item => (
           <Box key={item._id} padding={1}>
             <Text size="lg" color="red">
               {item.name} x {item.quantity} - ${item.quantity * item.price}
@@ -251,12 +293,12 @@ const ConfirmationModal = ({
   </Modal>
 );
 
-const CheckoutForm = injectStripe(_CheckoutForm);
+const CheckoutForm = withRouter(injectStripe(_CheckoutForm));
 
 const Checkout = () => (
   <StripeProvider apiKey="pk_test_51HFmoBAbY4PDXAYpvghdqL4SKpLFfmF23ke65sqeXzessFZ7SoHQEncPF9zEde9Mmk26Zi5nqbem7SKOAPbzawMz0025T2qFu6">
     <Elements>
-      <_CheckoutForm />
+      <CheckoutForm />
     </Elements>
   </StripeProvider>
 );

@@ -2,10 +2,16 @@ const CART_KEY = "cart";
 const TOKEN_KEY = "jwt";
 
 // Calculates cart price total
-export const calculatePrice = (items) => {
+export const calculatePrice = items => {
   return `$${items
     .reduce((acc, item) => acc + item.quantity * item.price, 0)
     .toFixed(2)}`;
+};
+
+export const calculateAmount = items => {
+  return Number(
+    items.reduce((acc, item) => acc + item.quantity * item.price, 0).toFixed(2)
+  );
 };
 
 // Sets cart to local storage as string
