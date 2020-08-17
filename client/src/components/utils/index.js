@@ -36,7 +36,7 @@ export const clearCart = (cartKey = CART_KEY) => {
   }
 };
 
-/* Auth */
+// Authorize user cart
 export const getToken = (tokenKey = TOKEN_KEY) => {
   if (localStorage && localStorage.getItem(tokenKey)) {
     return JSON.parse(localStorage.getItem(tokenKey));
